@@ -21,6 +21,7 @@ import path from 'path';
 
 // Load environment variables
 dotenv.config();
+fs.mkdirSync('logs', { recursive: true });
 
 // Configure logger
 const logger = winston.createLogger({
@@ -72,7 +73,13 @@ export class LaTeXMCPServer {
   private tools: Map<string, ToolDefinition> = new Map();
   private toolHandlers: Map<string, Function> = new Map();
   private isInitialized: boolean = false;
-
+/**
+ * Get the MCP server instance
+ * @returns MCP server instance
+ */
+public getMCPServer(): MCPServer {
+  return this.mcpServer;
+}
   /**
    * Constructor
    * @param configPath Path to configuration file (optional)
