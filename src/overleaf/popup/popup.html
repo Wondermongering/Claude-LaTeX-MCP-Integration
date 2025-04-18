@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+<head><title>Claude‑Eq</title></head>
+<body style="font-family: sans-serif; padding: 8px;">
+  <h4 style="margin:0;">Claude‑Eq</h4>
+  <p style="font-size: 12px;">Select text in Overleaf and click the “↳ Claude‑Eq” button.</p>
+  <p style="font-size: 11px;">Server: <code id="srv"></code></p>
+  <script>
+    document.getElementById('srv').textContent = chrome.runtime.getManifest().name;
+  </script>
+</body>
+</html>
