@@ -1,0 +1,32 @@
+{
+  "name": "Claude‑LaTeX Equation Assistant (Overleaf)",
+  "description": "Generate LaTeX equations in Overleaf via Claude‑MCP.",
+  "version": "0.1.0",
+  "manifest_version": 3,
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "contextMenus"
+  ],
+  "host_permissions": ["https://*.overleaf.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "128": "icons/128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.overleaf.com/project/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "icons": {
+    "128": "icons/128.png"
+  }
+}
