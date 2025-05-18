@@ -49,6 +49,10 @@ The integration consists of several components:
 
 ## 📂 Project Structure
 
+_The structure below shows the intended layout of the project. Several of the listed
+directories are not yet implemented in this repository and represent future
+work._
+
 ```
 claude-latex-mcp/
 ├── config/                     # Configuration files

@@ -23,7 +23,7 @@ async function main() {
   }
 }
 import { ToolDefinition, ExecuteToolResponseSchema } from '@anthropic-ai/mcp-typescript-sdk';
-import { generateEquation } from '../../extensions/equation/equation-generator';
+import { generateEquation } from './extensions/equation/equation-generator';
 
 // Define the tool
 const EquationTool: ToolDefinition = {
@@ -78,10 +78,10 @@ async function handler(params: any): Promise<ExecuteToolResponseSchema> {
   return generateEquation(params);
 }
 
-// Export both the definition and handler
-export default {
+// Export the equation generation tool and handler
+export const equationTool = {
   toolDefinition: EquationTool,
-  handler
+  handler,
 };
 // Only run the main function when this file is executed directly
 if (require.main === module) {

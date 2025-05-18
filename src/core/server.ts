@@ -73,6 +73,7 @@ export class LaTeXMCPServer {
   private tools: Map<string, ToolDefinition> = new Map();
   private toolHandlers: Map<string, Function> = new Map();
   private isInitialized: boolean = false;
+  private requestCounts: Map<string, number[]> = new Map();
 /**
  * Get the MCP server instance
  * @returns MCP server instance
@@ -195,6 +196,23 @@ public getMCPServer(): MCPServer {
     this.app.use(cors({
       origin: this.config.corsOrigins
     }));
+
+    // Simple rate limiting middleware
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      const ip = req.ip;
+      const now = Date.now();
+      const windowMs = 60 * 1000; // 1 minute
+      const maxRequests = 30;
+      const timestamps = this.requestCounts.get(ip) || [];
+      const recent = timestamps.filter(ts => now - ts < windowMs);
+      recent.push(now);
+      this.requestCounts.set(ip, recent);
+      if (recent.length > maxRequests) {
+        res.status(429).json({ error: 'Too many requests' });
+      } else {
+        next();
+      }
+    });
     
     // Add security headers
     this.app.use(helmet());
