@@ -74,13 +74,6 @@ export class LaTeXMCPServer {
   private toolHandlers: Map<string, Function> = new Map();
   private isInitialized: boolean = false;
   private requestCounts: Map<string, number[]> = new Map();
-/**
- * Get the MCP server instance
- * @returns MCP server instance
- */
-public getMCPServer(): MCPServer {
-  return this.mcpServer;
-}
   /**
    * Constructor
    * @param configPath Path to configuration file (optional)
