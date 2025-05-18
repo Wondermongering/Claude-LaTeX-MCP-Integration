@@ -18,6 +18,7 @@ import dotenv from 'dotenv';
 import winston from 'winston';
 import fs from 'fs';
 import path from 'path';
+import { equationTool } from '../extensions/equation/equation-generator';
 
 // Load environment variables
 dotenv.config();
@@ -449,47 +450,6 @@ export class LaTeXMCPServer {
   }
 }
 
-/**
- * EquationTool definition for the equation generation tool
- */
-const EquationTool: ToolDefinition = {
-  name: 'generate-latex-equation',
-  description: 'Converts natural language descriptions into properly formatted LaTeX equations',
-  parameters: {
-    type: 'object',
-    properties: {
-      description: {
-        type: 'string',
-        description: 'Natural language description of the equation to generate',
-      },
-      format: {
-        type: 'string',
-        enum: ['inline', 'display', 'align', 'gather', 'multline'],
-        description: 'LaTeX environment to use for the equation',
-        default: 'display',
-      },
-      numbered: {
-        type: 'boolean',
-        description: 'Whether the equation should be numbered',
-        default: false,
-      },
-    },
-    required: ['description'],
-  },
-  returns: {
-    type: 'object',
-    properties: {
-      latex: {
-        type: 'string',
-        description: 'Generated LaTeX code for the equation',
-      },
-      preview: {
-        type: 'string',
-        description: 'Plain text preview of how the equation might render',
-      },
-    },
-  },
-};
 
 /**
  * DocumentStructureTool definition for the document structure tool
@@ -535,102 +495,6 @@ const DocumentStructureTool: ToolDefinition = {
     },
   },
 };
-
-/**
- * Handle equation generation requests using Claude
- * @param parameters Request parameters
- * @returns Response with generated equation
- */
-async function handleEquationGeneration(server: LaTeXMCPServer, parameters: any): Promise<ExecuteToolResponseSchema> {
-  const { description, format = 'display', numbered = false } = parameters;
-  const claude = server.getClaudeClient();
-  const config = server.getConfig();
-  
-  // Build prompt for Claude
-  const prompt = `
-You are a LaTeX expert specializing in converting natural language descriptions into precise LaTeX equations.
-
-Description: ${description}
-
-Please generate the LaTeX code for this equation. Only include the mathematical expression itself, not the surrounding environment tags like \\begin{equation} or $.
-
-The equation should be mathematically correct and follow standard notation.
-`;
-
-  try {
-    // Call Claude to generate the equation
-    const response = await claude.messages.create({
-      model: config.claudeModel,
-      max_tokens: 1000,
-      temperature: 0.2, // Low temperature for more deterministic results
-      system: "You are a LaTeX expert focused on mathematical and scientific equations. Provide precise, correct LaTeX code for equations based on natural language descriptions.",
-      messages: [
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
-    });
-
-    // Extract the LaTeX code from Claude's response
-    const fullResponse = response.content[0].text;
-    
-    // Parse the response to extract the equation
-    const latexMatch = fullResponse.match(/```latex\n([\s\S]*?)\n```/) || 
-                       fullResponse.match(/`(.*?)`/) ||
-                       fullResponse.match(/LaTeX code:([\s\S]*?)(?:\n\n|$)/);
-    
-    let latexCode = '';
-    if (latexMatch) {
-      latexCode = latexMatch[1].trim();
-    } else {
-      // Fallback: try to extract anything that looks like LaTeX
-      latexCode = fullResponse.trim();
-    }
-    
-    // Format the equation with the appropriate environment
-    let formattedLatex = '';
-    
-    switch (format) {
-      case 'inline':
-        formattedLatex = `$${latexCode}$`;
-        break;
-      case 'display':
-        formattedLatex = numbered
-          ? `\\begin{equation}\n  ${latexCode}\n\\end{equation}`
-          : `\\begin{equation*}\n  ${latexCode}\n\\end{equation*}`;
-        break;
-      case 'align':
-        formattedLatex = numbered
-          ? `\\begin{align}\n  ${latexCode}\n\\end{align}`
-          : `\\begin{align*}\n  ${latexCode}\n\\end{align*}`;
-        break;
-      case 'gather':
-        formattedLatex = numbered
-          ? `\\begin{gather}\n  ${latexCode}\n\\end{gather}`
-          : `\\begin{gather*}\n  ${latexCode}\n\\end{gather*}`;
-        break;
-      case 'multline':
-        formattedLatex = numbered
-          ? `\\begin{multline}\n  ${latexCode}\n\\end{multline}`
-          : `\\begin{multline*}\n  ${latexCode}\n\\end{multline*}`;
-        break;
-      default:
-        formattedLatex = `\\begin{equation*}\n  ${latexCode}\n\\end{equation*}`;
-    }
-    
-    return {
-      result: {
-        latex: formattedLatex,
-        preview: `Preview: ${latexCode}`,
-      },
-    };
-  } catch (error) {
-    logger.error('Error generating equation with Claude:', error);
-    throw new Error(`Failed to generate equation: ${(error as Error).message}`);
-  }
-}
-
 /**
  * Handle document structure creation requests using Claude
  * @param parameters Request parameters
@@ -713,8 +577,8 @@ async function main() {
     
     // Register core tools
     server.registerTool(
-      EquationTool, 
-      (parameters: any) => handleEquationGeneration(server, parameters)
+      equationTool.toolDefinition,
+      equationTool.handler
     );
     
     server.registerTool(

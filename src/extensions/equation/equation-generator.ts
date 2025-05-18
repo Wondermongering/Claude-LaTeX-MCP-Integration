@@ -3,7 +3,10 @@
  * ------------------------------------------------------------------ */
 
 import { Claude } from '@anthropic/sdk';
-import type { ExecuteToolResponseSchema } from '@anthropic-ai/mcp-typescript-sdk';
+import type {
+  ExecuteToolResponseSchema,
+  ToolDefinition
+} from '@anthropic-ai/mcp-typescript-sdk';
 import { isValidCommand } from './math-symbols-library';
 
 /* ------------------------------------------------------------------
@@ -174,3 +177,68 @@ export function validateEquation(code: string): string[] {
   }
   return errs;
 }
+
+/**
+ * MCP tool definition for equation generation.
+ */
+export const EquationTool: ToolDefinition = {
+  name: 'generate-latex-equation',
+  description: 'Converts natural language descriptions into properly formatted LaTeX equations',
+  parameters: {
+    type: 'object',
+    properties: {
+      description: {
+        type: 'string',
+        description: 'Natural language description of the equation to generate',
+      },
+      format: {
+        type: 'string',
+        enum: ['inline', 'display', 'align', 'gather', 'multline'],
+        description: 'LaTeX environment to use for the equation',
+        default: 'display',
+      },
+      numbered: {
+        type: 'boolean',
+        description: 'Whether the equation should be numbered',
+        default: false,
+      },
+      additionalContext: {
+        type: 'string',
+        description: 'Additional context to help with equation generation',
+      },
+    },
+    required: ['description'],
+  },
+  returns: {
+    type: 'object',
+    properties: {
+      latex: {
+        type: 'string',
+        description: 'Generated LaTeX code for the equation',
+      },
+      preview: {
+        type: 'string',
+        description: 'Plain text preview of how the equation might render',
+      },
+      explanation: {
+        type: 'string',
+        description: 'Explanation of the equation',
+      },
+    },
+  },
+};
+
+/**
+ * Handler function used by the MCP server.
+ */
+export async function equationToolHandler(
+  params: EquationGenerationParams
+): Promise<ExecuteToolResponseSchema> {
+  return generateEquation(params);
+}
+
+/** Convenience bundle of the tool definition and handler. */
+export const equationTool = {
+  toolDefinition: EquationTool,
+  handler: equationToolHandler,
+};
