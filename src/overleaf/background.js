@@ -12,7 +12,7 @@ chrome.runtime.onInstalled.addListener(() => {
 async function fetchEquation({ text, format, numbered }) {
   const cfg = await chrome.storage.sync.get({
     apiUrl: 'http://localhost:3000',
-    apiEndpoint: '/tools/equation/generate'
+    apiEndpoint: '/mcp'
   });
 
   const url = cfg.apiUrl.replace(/\/$/, '') + cfg.apiEndpoint;
@@ -21,9 +21,13 @@ async function fetchEquation({ text, format, numbered }) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      description: text,
-      format,
-      numbered
+      type: 'ExecuteTool',
+      tool: 'generate-latex-equation',
+      parameters: {
+        description: text,
+        format,
+        numbered
+      }
     })
   });
 
