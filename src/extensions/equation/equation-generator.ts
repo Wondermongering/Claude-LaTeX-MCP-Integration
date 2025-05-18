@@ -19,6 +19,7 @@ export interface EquationGenerationParams {
   format: 'inline' | 'display' | 'align' | 'gather' | 'multline';
   numbered: boolean;
   additionalContext?: string;
+  model?: string;
 }
 
 export interface EquationGenerationResult {
@@ -32,12 +33,12 @@ export interface EquationGenerationResult {
 export async function generateEquation(
   params: EquationGenerationParams
 ): Promise<ExecuteToolResponseSchema> {
-  const { description, format, numbered, additionalContext = '' } = params;
+  const { description, format, numbered, additionalContext = '', model } = params;
 
   const cached = matchKnownEquationPattern(description);
   if (cached) return formatEquationResult(cached, format, numbered);
 
-  const aiRes = await generateEquationWithClaude(description, additionalContext);
+  const aiRes = await generateEquationWithClaude(description, additionalContext, model);
   return formatEquationResult(aiRes, format, numbered);
 }
 
@@ -80,7 +81,8 @@ function matchKnownEquationPattern(desc: string): EquationGenerationResult | nul
 /* ------------------------------------------------------------------ */
 async function generateEquationWithClaude(
   description: string,
-  additionalContext: string
+  additionalContext: string,
+  model?: string
 ): Promise<EquationGenerationResult> {
   const prompt = `
 You are a LaTeX expert. Produce ONLY the raw LaTeX expression
@@ -92,7 +94,7 @@ ${additionalContext ? `Context: ${additionalContext}` : ''}
 `;
 
   const res = await claude.messages.create({
-    model: 'claude-3-5-sonnet-20240620',
+    model: model ?? process.env.CLAUDE_MODEL ?? 'claude-3-5-sonnet-20240620',
     system: 'Strictly follow the output spec.',
     temperature: 0.1,
     max_tokens: 800,

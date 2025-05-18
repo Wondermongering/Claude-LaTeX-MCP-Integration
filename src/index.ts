@@ -75,7 +75,7 @@ const EquationTool: ToolDefinition = {
 
 // Handler function
 async function handler(params: any): Promise<ExecuteToolResponseSchema> {
-  return generateEquation(params);
+  return generateEquation({ ...params, model: process.env.CLAUDE_MODEL });
 }
 
 // Export the equation generation tool and handler
