@@ -122,6 +122,7 @@ npm install
 # Configure your environment
 cp .env.example .env
 # Edit .env to add your Anthropic API key
+# See `src/ENVIRONMENT.md` for details on the required variables
 
 # Start the MCP server
 npm run server
